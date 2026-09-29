@@ -37,30 +37,30 @@ func panel_style(color: Color, radius := 12) -> StyleBoxFlat:
     return style
 
 func build_ui() -> void:
-    var top := PanelContainer.new(); top.position = Vector2(18, 14); top.size = Vector2(1116, 82); top.add_theme_stylebox_override("panel", panel_style(Color("#0d1d39"), 16)); add_child(top)
-    var top_row := HBoxContainer.new(); top_row.add_theme_constant_override("separation", 22); top.add_child(top_row)
-    var title := make_label("STARTUP TYCOON\nStart Small. Build Smart. Own the Market.", 21, Color("#e9f8ff")); title.custom_minimum_size = Vector2(310, 0); top_row.add_child(title)
-    cash_label = make_label("", 18, Color("#7dffbd")); cash_label.custom_minimum_size = Vector2(200, 0); top_row.add_child(cash_label)
-    metrics_label = make_label("", 15, Color("#b4cee3")); metrics_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL; top_row.add_child(metrics_label)
-    var save := Button.new(); save.text = "SAVE"; save.custom_minimum_size = Vector2(90, 42); save.pressed.connect(_save); top_row.add_child(save)
-    var left := PanelContainer.new(); left.position = Vector2(18, 112); left.size = Vector2(130, 450); left.add_theme_stylebox_override("panel", panel_style(Color("#0b1931"), 14)); add_child(left)
-    var nav := VBoxContainer.new(); nav.add_theme_constant_override("separation", 10); left.add_child(nav)
-    for item in ["BUILD CITY", "COMPANIES", "MARKET", "EMPLOYEES", "RESEARCH", "FINANCE", "EMPIRE"]:
-        var b := Button.new(); b.text = item; b.custom_minimum_size = Vector2(102, 42); b.pressed.connect(_on_nav.bind(item)); nav.add_child(b)
-    var right := PanelContainer.new(); right.position = Vector2(894, 112); right.size = Vector2(240, 450); right.add_theme_stylebox_override("panel", panel_style(Color("#0b1931"), 14)); add_child(right)
-    var stack := VBoxContainer.new(); stack.add_theme_constant_override("separation", 10); right.add_child(stack)
-    var header := make_label("BUILD & MANAGE", 17, Color("#f4fbff")); stack.add_child(header)
-    selected_label = make_label("Select a building in the city", 14, Color("#b4cee3")); selected_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART; selected_label.custom_minimum_size = Vector2(200, 80); stack.add_child(selected_label)
-    var upgrade := Button.new(); upgrade.text = "UPGRADE SELECTED"; upgrade.custom_minimum_size = Vector2(210, 46); upgrade.pressed.connect(_upgrade); stack.add_child(upgrade)
-    var company := Button.new(); company.text = "CREATE COMPANY  ₹25K"; company.pressed.connect(_create_company); stack.add_child(company)
-    var hire := Button.new(); hire.text = "HIRE EMPLOYEE  ₹8K"; hire.pressed.connect(_hire); stack.add_child(hire)
-    var develop := Button.new(); develop.text = "DEVELOP PRODUCT"; develop.pressed.connect(_develop); stack.add_child(develop)
-    var tick := Button.new(); tick.text = "ADVANCE 1 DAY"; tick.pressed.connect(_advance_day); stack.add_child(tick)
-    action_label = make_label("Tip: build and upgrade to grow revenue.", 13, Color("#7ea7c0")); action_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART; stack.add_child(action_label)
-    var bottom := PanelContainer.new(); bottom.position = Vector2(240, 612); bottom.size = Vector2(654, 70); bottom.add_theme_stylebox_override("panel", panel_style(Color("#09152a"), 18)); add_child(bottom)
-    var tabs := HBoxContainer.new(); tabs.alignment = BoxContainer.ALIGNMENT_CENTER; tabs.add_theme_constant_override("separation", 44); bottom.add_child(tabs)
-    for item in ["CITY", "BUSINESS", "MARKET", "RESEARCH", "EMPIRE"]:
-        var t := make_label(item, 15, Color("#d8f4ff")); tabs.add_child(t)
+    var top := PanelContainer.new(); top.position = Vector2(16, 12); top.size = Vector2(1120, 72); top.add_theme_stylebox_override("panel", panel_style(Color("#0a1931"), 16)); add_child(top)
+    var top_row := HBoxContainer.new(); top_row.add_theme_constant_override("separation", 18); top.add_child(top_row)
+    var title := make_label("STARTUP TYCOON\nBUSINESS CITY", 18, Color("#e9f8ff")); title.custom_minimum_size = Vector2(190, 0); top_row.add_child(title)
+    cash_label = make_label("", 17, Color("#7dffbd")); cash_label.custom_minimum_size = Vector2(170, 0); top_row.add_child(cash_label)
+    metrics_label = make_label("", 13, Color("#b4cee3")); metrics_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL; top_row.add_child(metrics_label)
+    var save := Button.new(); save.text = "SAVE"; save.custom_minimum_size = Vector2(72, 38); save.pressed.connect(_save); top_row.add_child(save)
+    var left := PanelContainer.new(); left.position = Vector2(14, 102); left.size = Vector2(94, 324); left.add_theme_stylebox_override("panel", panel_style(Color(0.03, 0.09, 0.17, 0.92), 14)); add_child(left)
+    var nav := VBoxContainer.new(); nav.add_theme_constant_override("separation", 6); left.add_child(nav)
+    for item in ["BUILD", "BIZ", "MARKET", "STAFF", "TECH", "EMPIRE"]:
+        var b := Button.new(); b.text = item; b.custom_minimum_size = Vector2(72, 38); b.pressed.connect(_on_nav.bind(item)); nav.add_child(b)
+    var right := PanelContainer.new(); right.position = Vector2(900, 102); right.size = Vector2(238, 300); right.add_theme_stylebox_override("panel", panel_style(Color(0.03, 0.09, 0.17, 0.94), 14)); add_child(right)
+    var stack := VBoxContainer.new(); stack.add_theme_constant_override("separation", 7); right.add_child(stack)
+    var header := make_label("CITY COMMAND", 16, Color("#f4fbff")); stack.add_child(header)
+    selected_label = make_label("Tap a business building\nto inspect it", 13, Color("#b4cee3")); selected_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART; selected_label.custom_minimum_size = Vector2(205, 60); stack.add_child(selected_label)
+    var upgrade := Button.new(); upgrade.text = "UPGRADE"; upgrade.custom_minimum_size = Vector2(205, 36); upgrade.pressed.connect(_upgrade); stack.add_child(upgrade)
+    var company := Button.new(); company.text = "CREATE COMPANY  ₹25K"; company.custom_minimum_size = Vector2(205, 32); company.pressed.connect(_create_company); stack.add_child(company)
+    var hire := Button.new(); hire.text = "HIRE SPECIALIST  ₹8K"; hire.custom_minimum_size = Vector2(205, 32); hire.pressed.connect(_hire); stack.add_child(hire)
+    var develop := Button.new(); develop.text = "DEVELOP PRODUCT"; develop.custom_minimum_size = Vector2(205, 32); develop.pressed.connect(_develop); stack.add_child(develop)
+    var tick := Button.new(); tick.text = "CLOSE DAY"; tick.custom_minimum_size = Vector2(205, 32); tick.pressed.connect(_advance_day); stack.add_child(tick)
+    action_label = make_label("Build your business skyline.", 12, Color("#7ea7c0")); action_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART; stack.add_child(action_label)
+    var bottom := PanelContainer.new(); bottom.position = Vector2(180, 636); bottom.size = Vector2(790, 58); bottom.add_theme_stylebox_override("panel", panel_style(Color(0.02, 0.07, 0.14, 0.94), 18)); add_child(bottom)
+    var tabs := HBoxContainer.new(); tabs.alignment = BoxContainer.ALIGNMENT_CENTER; tabs.add_theme_constant_override("separation", 52); bottom.add_child(tabs)
+    for item in ["CITY", "COMPANY", "MARKET", "RESEARCH", "EMPIRE"]:
+        var t := make_label(item, 14, Color("#d8f4ff")); tabs.add_child(t)
 
 func refresh_ui() -> void:
     if not is_instance_valid(cash_label): return
