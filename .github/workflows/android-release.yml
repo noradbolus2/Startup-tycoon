@@ -1,0 +1,19 @@
+name: Android Release
+on:
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: chickensoft-games/setup-godot@v2
+        with:
+          version: 4.3.0
+          use-dotnet: false
+          include耗: false
+      - name: Export Android APK
+        run: godot --headless --path . --export-release Android build/StartupTycoon-release.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: StartupTycoon-release
+          path: build/StartupTycoon-release.apk
