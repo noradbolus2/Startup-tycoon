@@ -64,6 +64,7 @@ func _create_environment() -> void:
     sun.light_energy = 1.35
     sun.shadow_enabled = true
     add_child(sun)
+    VisualProfileService.configure_environment(env, sun)
 
 func _create_camera() -> void:
     camera = Camera3D.new()
@@ -116,8 +117,18 @@ func _create_district_landmarks() -> void:
         {"name":"Corporate Tower", "pos":Vector3(28.0, 0.0, 24.0), "height":17.0, "color":Color("#7356c7")}
     ]
     for landmark in landmarks:
-        var landmark_style: String = "tech" if landmark.name == "Tech Tower" else ("finance" if landmark.name == "Financial Spire" else ("research" if landmark.name == "Research Campus" else "corporate"))
-        _create_building_mesh(landmark.name, landmark.pos, landmark.height, 3.2, landmark.color, Color("#c9f5ff"), world_root, landmark_style)
+        var prefab_path: String = "res://scenes/landmarks/CorporateTower.tscn"
+        if landmark.name == "Tech Tower": prefab_path = "res://scenes/landmarks/TechSpire.tscn"
+        elif landmark.name == "Research Campus": prefab_path = "res://scenes/landmarks/ResearchCampus.tscn"
+        var prefab := load(prefab_path)
+        if prefab is PackedScene:
+            var landmark_node: Node3D = prefab.instantiate()
+            landmark_node.name = landmark.name
+            landmark_node.position = landmark.pos
+            world_root.add_child(landmark_node)
+        else:
+            var landmark_style: String = "finance" if landmark.name == "Financial Spire" else "corporate"
+            _create_building_mesh(landmark.name, landmark.pos, landmark.height, 3.2, landmark.color, Color("#c9f5ff"), world_root, landmark_style)
         _add_landmark_light(landmark.pos, landmark.color)
 
 func _create_decor_buildings() -> void:

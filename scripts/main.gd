@@ -50,7 +50,7 @@ func build_ui() -> void:
     var nav := VBoxContainer.new(); nav.add_theme_constant_override("separation", 6); left.add_child(nav)
     for item in ["BUILD", "BIZ", "MARKET", "STAFF", "TECH", "EMPIRE"]:
         var b := Button.new(); b.text = item; b.custom_minimum_size = Vector2(72, 38); b.pressed.connect(_on_nav.bind(item)); nav.add_child(b)
-    var right := PanelContainer.new(); right.position = Vector2(900, 102); right.size = Vector2(238, 364); right.add_theme_stylebox_override("panel", panel_style(Color(0.03, 0.09, 0.17, 0.94), 14)); add_child(right)
+    var right := PanelContainer.new(); right.position = Vector2(900, 102); right.size = Vector2(238, 412); right.add_theme_stylebox_override("panel", panel_style(Color(0.03, 0.09, 0.17, 0.94), 14)); add_child(right)
     var stack := VBoxContainer.new(); stack.add_theme_constant_override("separation", 7); right.add_child(stack)
     var header := make_label("CITY COMMAND", 16, Color("#f4fbff")); stack.add_child(header)
     selected_label = make_label("Tap a business building\nto inspect it", 13, Color("#b4cee3")); selected_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART; selected_label.custom_minimum_size = Vector2(205, 60); stack.add_child(selected_label)
@@ -61,6 +61,7 @@ func build_ui() -> void:
     var tick := Button.new(); tick.text = "CLOSE DAY"; tick.custom_minimum_size = Vector2(205, 32); tick.pressed.connect(_advance_day); stack.add_child(tick)
     var analytics := Button.new(); analytics.text = "ANALYTICS"; analytics.custom_minimum_size = Vector2(205, 32); analytics.pressed.connect(_show_analytics); stack.add_child(analytics)
     var offers := Button.new(); offers.text = "OFFERS / SUPPORT"; offers.custom_minimum_size = Vector2(205, 32); offers.pressed.connect(_show_offers); stack.add_child(offers)
+    var diagnostics := Button.new(); diagnostics.text = "VISUAL DIAGNOSTICS"; diagnostics.custom_minimum_size = Vector2(205, 32); diagnostics.pressed.connect(_show_visual_diagnostics); stack.add_child(diagnostics)
     action_label = make_label("Build your business skyline.", 12, Color("#7ea7c0")); action_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART; stack.add_child(action_label)
     var bottom := PanelContainer.new(); bottom.position = Vector2(180, 636); bottom.size = Vector2(790, 58); bottom.add_theme_stylebox_override("panel", panel_style(Color(0.02, 0.07, 0.14, 0.94), 18)); add_child(bottom)
     var tabs := HBoxContainer.new(); tabs.alignment = BoxContainer.ALIGNMENT_CENTER; tabs.add_theme_constant_override("separation", 52); bottom.add_child(tabs)
@@ -123,3 +124,6 @@ func _show_offers() -> void:
 
 func _on_purchase_result(message: String) -> void:
     action_label.text = message
+
+func _show_visual_diagnostics() -> void:
+    action_label.text = VisualProfileService.diagnostics()

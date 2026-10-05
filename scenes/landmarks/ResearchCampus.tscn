@@ -1,0 +1,64 @@
+[gd_scene load_steps=8 format=3]
+
+[sub_resource type="StandardMaterial3D" id="MatBody"]
+albedo_color = Color(0.1, 0.46, 0.39, 1)
+roughness = 0.5
+
+[sub_resource type="StandardMaterial3D" id="MatGlass"]
+albedo_color = Color(0.45, 0.96, 0.83, 1)
+emission_enabled = true
+emission = Color(0.08, 0.55, 0.35, 1)
+emission_energy_multiplier = 0.45
+roughness = 0.22
+
+[sub_resource type="StandardMaterial3D" id="MatRoof"]
+albedo_color = Color(0.76, 0.88, 0.78, 1)
+roughness = 0.42
+
+[sub_resource type="BoxMesh" id="WingMesh"]
+size = Vector3(5.5, 4.8, 4.2)
+
+[sub_resource type="BoxMesh" id="GlassMesh"]
+size = Vector3(5.7, 0.28, 0.12)
+
+[sub_resource type="BoxMesh" id="RoofMesh"]
+size = Vector3(6.0, 0.25, 4.7)
+
+[sub_resource type="CylinderMesh" id="DomeMesh"]
+top_radius = 1.2
+bottom_radius = 1.7
+height = 1.3
+
+[node name="ResearchCampus" type="Node3D"]
+
+[node name="LeftWing" type="MeshInstance3D" parent="."]
+mesh = SubResource("WingMesh")
+material_override = SubResource("MatBody")
+position = Vector3(-3.1, 2.4, 0)
+
+[node name="RightWing" type="MeshInstance3D" parent="."]
+mesh = SubResource("WingMesh")
+material_override = SubResource("MatBody")
+position = Vector3(3.1, 2.4, 0)
+
+[node name="GlassBridge" type="MeshInstance3D" parent="."]
+mesh = SubResource("GlassMesh")
+material_override = SubResource("MatGlass")
+position = Vector3(0, 3.3, 2.16)
+
+[node name="Roof" type="MeshInstance3D" parent="."]
+mesh = SubResource("RoofMesh")
+material_override = SubResource("MatRoof")
+position = Vector3(0, 4.9, 0)
+
+[node name="LabDome" type="MeshInstance3D" parent="."]
+mesh = SubResource("DomeMesh")
+material_override = SubResource("MatGlass")
+position = Vector3(0, 5.7, 0)
+
+[node name="CampusLight" type="OmniLight3D" parent="."]
+position = Vector3(0, 4.5, 0)
+light_color = Color(0.35, 1, 0.75, 1)
+light_energy = 1.1
+omni_range = 10.0
+shadow_enabled = false
