@@ -18,6 +18,8 @@ var cars: Array[Dictionary] = []
 var boats: Array[Dictionary] = []
 var touches: Dictionary = {}
 var last_pinch_distance := 0.0
+var touch_start := Vector2.ZERO
+var touch_moved := false
 
 const TILE_W := 42.0
 const TILE_H := 21.0
@@ -274,14 +276,22 @@ func _unhandled_input(event: InputEvent) -> void:
     elif event is InputEventScreenTouch:
         if event.pressed:
             touches[event.index] = event.position
+            if touches.size() == 1:
+                touch_start = event.position
+                touch_moved = false
         else:
             touches.erase(event.index)
-            if touches.is_empty(): select_at(event.position)
+            if touches.is_empty():
+                if not touch_moved and event.position.distance_to(touch_start) < 24.0:
+                    select_at(event.position)
+                last_pinch_distance = 0.0
     elif event is InputEventScreenDrag:
         touches[event.index] = event.position
         if touches.size() == 1:
+            if event.position.distance_to(touch_start) > 14.0: touch_moved = true
             target_offset += event.relative
         elif touches.size() >= 2:
+            touch_moved = true
             var points := touches.values()
             var distance: float = points[0].distance_to(points[1])
             if last_pinch_distance > 0.0:

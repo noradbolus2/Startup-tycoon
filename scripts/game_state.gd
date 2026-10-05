@@ -14,6 +14,7 @@ var product_name: String = "Nova Assistant"
 var day: int = 1
 var buildings: Array[Dictionary] = []
 var last_saved_unix: int = 0
+var offline_summary: String = ""
 
 func _ready() -> void:
     if buildings.is_empty():
@@ -35,7 +36,7 @@ func daily_tick() -> void:
     notify()
 
 func to_dict() -> Dictionary:
-    return {"cash":cash, "reputation":reputation, "employees":employees, "companies":companies, "research":research, "revenue_per_day":revenue_per_day, "expenses_per_day":expenses_per_day, "product_stage":product_stage, "product_name":product_name, "day":day, "buildings":buildings, "last_saved_unix":Time.get_unix_time_from_system()}
+    return {"save_version":2, "cash":cash, "reputation":reputation, "employees":employees, "companies":companies, "research":research, "revenue_per_day":revenue_per_day, "expenses_per_day":expenses_per_day, "product_stage":product_stage, "product_name":product_name, "day":day, "buildings":buildings, "last_saved_unix":last_saved_unix}
 
 func from_dict(data: Dictionary) -> void:
     for key in ["cash","reputation","employees","companies","research","revenue_per_day","expenses_per_day","product_stage","product_name","day","buildings","last_saved_unix"]:

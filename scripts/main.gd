@@ -9,7 +9,7 @@ var action_label: Label
 
 func _ready() -> void:
     EconomyEngine.recalculate(GameState)
-    SaveManager.load_game(GameState)
+    var load_message := SaveManager.load_game(GameState)
     EconomyEngine.recalculate(GameState)
     city = CityView.new()
     city.name = "CityView"
@@ -19,6 +19,7 @@ func _ready() -> void:
     build_ui()
     GameState.state_changed.connect(refresh_ui)
     refresh_ui()
+    if not load_message.is_empty(): action_label.text = load_message
 
 func make_label(text: String, size: int, color: Color) -> Label:
     var label := Label.new()
