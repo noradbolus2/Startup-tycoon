@@ -54,4 +54,9 @@ func _load_local() -> void:
     file.close()
     if parsed is Dictionary:
         counters = parsed.get("counters", {})
-        events = parsed.get("events", [])
+        events.clear()
+        var loaded_events = parsed.get("events", [])
+        if loaded_events is Array:
+            for item in loaded_events:
+                if item is Dictionary:
+                    events.append(item)

@@ -51,6 +51,9 @@ func _create_environment() -> void:
     env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
     env.ambient_light_color = Color("#9fc9e5")
     env.ambient_light_energy = 0.75
+    env.fog_enabled = true
+    env.fog_light_color = Color("#21435b")
+    env.fog_density = 0.006
     env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
     environment.environment = env
     add_child(environment)
@@ -113,7 +116,9 @@ func _create_district_landmarks() -> void:
         {"name":"Corporate Tower", "pos":Vector3(28.0, 0.0, 24.0), "height":17.0, "color":Color("#7356c7")}
     ]
     for landmark in landmarks:
-        _create_building_mesh(landmark.name, landmark.pos, landmark.height, 3.2, landmark.color, Color("#c9f5ff"), world_root)
+        var landmark_style: String = "tech" if landmark.name == "Tech Tower" else ("finance" if landmark.name == "Financial Spire" else ("research" if landmark.name == "Research Campus" else "corporate"))
+        _create_building_mesh(landmark.name, landmark.pos, landmark.height, 3.2, landmark.color, Color("#c9f5ff"), world_root, landmark_style)
+        _add_landmark_light(landmark.pos, landmark.color)
 
 func _create_decor_buildings() -> void:
     var styles := [Color("#d17863"), Color("#3e98d8"), Color("#a96555"), Color("#345ca8"), Color("#533c9f"), Color("#287c73"), Color("#b94782")]
@@ -123,7 +128,8 @@ func _create_decor_buildings() -> void:
                 continue
             var height := 2.0 + float(absi((x * 3 + z * 5) % 6)) * 1.15
             var style: Color = styles[absi(x + z * 2) % styles.size()]
-            _create_building_mesh("DistrictBuilding", Vector3(x * GRID, 0.0, z * GRID), height, 1.25, style, Color("#d8f5ff"), world_root)
+            var style_name := "tech" if style == Color("#3e98d8") else ("industrial" if style == Color("#a96555") else ("finance" if style == Color("#345ca8") else "office"))
+            _create_building_mesh("DistrictBuilding", Vector3(x * GRID, 0.0, z * GRID), height, 1.25, style, Color("#d8f5ff"), world_root, style_name)
 
 func _create_state_buildings() -> void:
     for building in state.buildings:
@@ -131,7 +137,8 @@ func _create_state_buildings() -> void:
         var style := Color("#e8b55d") if building.kind == "hq" else (Color("#5cd4e8") if building.kind == "lab" else Color("#d47c9e"))
         var level := int(building.level)
         var height := 3.0 + level * 1.8
-        var node := _create_building_mesh(building.name, Vector3(pos.x * GRID, 0.0, pos.y * GRID), height, 1.8 + level * 0.12, style, Color("#e9fbff"), world_root)
+        var style_name := "corporate" if building.kind == "hq" else ("research" if building.kind == "lab" else ("industrial" if building.kind == "hub" else "office"))
+        var node := _create_building_mesh(building.name, Vector3(pos.x * GRID, 0.0, pos.y * GRID), height, 1.8 + level * 0.12, style, Color("#e9fbff"), world_root, style_name)
         node.set_meta("building_id", building.id)
         node.set_meta("building_data", building)
         building_nodes[building.id] = node
@@ -142,17 +149,35 @@ func _create_city_life() -> void:
         var vehicle := _add_box("Vehicle", Vector3(0.65, 0.28, 1.25), Vector3(-22.0 + i * 4.0, 0.35, -12.0), Color("#f4c95d") if i % 2 == 0 else Color("#66c7e6"), world_root)
         vehicles.append(vehicle)
 
-func _create_building_mesh(label: String, position: Vector3, height: float, footprint: float, color: Color, glass: Color, parent: Node3D) -> Node3D:
+func _create_building_mesh(label: String, position: Vector3, height: float, footprint: float, color: Color, glass: Color, parent: Node3D, style: String = "office") -> Node3D:
     var root := Node3D.new()
     root.name = label
     root.position = position
     parent.add_child(root)
-    var body := _add_box("Structure", Vector3(footprint, height, footprint), Vector3(0.0, height * 0.5, 0.0), color, root)
-    var roof := _add_box("Rooftop", Vector3(footprint * 1.08, 0.22, footprint * 1.08), Vector3(0.0, height + 0.12, 0.0), color.lightened(0.22), root)
+    _add_box("Structure", Vector3(footprint, height, footprint), Vector3(0.0, height * 0.5, 0.0), color, root)
+    _add_box("Rooftop", Vector3(footprint * 1.08, 0.22, footprint * 1.08), Vector3(0.0, height + 0.12, 0.0), color.lightened(0.22), root)
     for floor in range(maxi(2, int(height / 1.7))):
         var y := 0.8 + floor * 1.5
-        _add_box("WindowBand", Vector3(footprint * 1.01, 0.34, 0.06), Vector3(0.0, y, footprint * 0.51), glass, root)
-        _add_box("WindowBand", Vector3(footprint * 1.01, 0.34, 0.06), Vector3(0.0, y, -footprint * 0.51), glass, root)
+        var window_glow := Color("#ffd782") if floor % 3 != 1 else glass
+        _add_box("WindowBand", Vector3(footprint * 1.01, 0.34, 0.06), Vector3(0.0, y, footprint * 0.51), glass, root, window_glow, 0.22)
+        _add_box("WindowBand", Vector3(footprint * 1.01, 0.34, 0.06), Vector3(0.0, y, -footprint * 0.51), glass, root, window_glow, 0.22)
+        if style == "office" or style == "corporate":
+            _add_box("Balcony", Vector3(footprint * 0.72, 0.08, 0.48), Vector3(0.0, y + 0.42, footprint * 0.68), color.darkened(0.15), root)
+    if style == "tech" or style == "research":
+        for side in [-1.0, 1.0]:
+            _add_box("GlassFin", Vector3(0.12, height * 0.92, 0.16), Vector3(side * footprint * 0.55, height * 0.5, 0.0), glass, root, Color("#6ee8ff"), 0.32)
+        _add_box("Antenna", Vector3(0.08, 1.4, 0.08), Vector3(0.0, height + 0.8, 0.0), Color("#b4d9e4"), root)
+        _add_box("TechBeacon", Vector3(0.32, 0.14, 0.32), Vector3(0.0, height + 1.55, 0.0), Color("#55dfff"), root, Color("#55dfff"), 1.2)
+    elif style == "industrial":
+        for side in [-1.0, 1.0]:
+            _add_box("ServiceTank", Vector3(0.42, 0.7, 0.42), Vector3(side * footprint * 0.36, height + 0.48, 0.0), Color("#b9c6c5"), root)
+        _add_box("FactorySign", Vector3(footprint * 0.7, 0.42, 0.08), Vector3(0.0, height * 0.62, footprint * 0.54), Color("#efb44c"), root, Color("#efb44c"), 0.3)
+    elif style == "finance":
+        for side in [-1.0, 1.0]:
+            _add_box("VerticalFin", Vector3(0.16, height * 1.03, 0.22), Vector3(side * footprint * 0.56, height * 0.52, footprint * 0.25), color.lightened(0.25), root)
+        _add_box("LogoBand", Vector3(footprint * 0.82, 0.5, 0.08), Vector3(0.0, height * 0.68, footprint * 0.54), Color("#f1d17d"), root, Color("#f1d17d"), 0.18)
+    else:
+        _add_box("FacadeCanopy", Vector3(footprint * 0.78, 0.16, 0.5), Vector3(0.0, 1.0, footprint * 0.68), color.lightened(0.14), root)
     _add_box("Entrance", Vector3(0.5, 0.8, 0.08), Vector3(0.0, 0.4, footprint * 0.53), Color("#172a3d"), root)
     return root
 
@@ -168,14 +193,14 @@ func _add_building_collision(node: Node3D, size: Vector3, building: Dictionary) 
     shape.shape = box
     body.add_child(shape)
 
-func _add_box(label: String, size: Vector3, position: Vector3, color: Color, parent: Node3D) -> Node3D:
+func _add_box(label: String, size: Vector3, position: Vector3, color: Color, parent: Node3D, emission: Color = Color(0.0, 0.0, 0.0, 0.0), emission_energy: float = 0.0) -> Node3D:
     var mesh_instance := MeshInstance3D.new()
     mesh_instance.name = label
     var mesh := BoxMesh.new()
     mesh.size = size
     mesh_instance.mesh = mesh
     mesh_instance.position = position
-    mesh_instance.material_override = _material(color)
+    mesh_instance.material_override = _material(color, emission, emission_energy)
     parent.add_child(mesh_instance)
     return mesh_instance
 
@@ -192,12 +217,26 @@ func _create_tree(position: Vector3, scale_value: float) -> void:
 
 func _create_streetlight(position: Vector3) -> void:
     _add_box("LampPole", Vector3(0.08, 1.8, 0.08), position + Vector3(0.0, 0.9, 0.0), Color("#a9bdc7"), world_root)
-    _add_box("Lamp", Vector3(0.32, 0.08, 0.32), position + Vector3(0.0, 1.85, 0.0), Color("#ffe89c"), world_root)
+    _add_box("Lamp", Vector3(0.32, 0.08, 0.32), position + Vector3(0.0, 1.85, 0.0), Color("#ffe89c"), world_root, Color("#ffe89c"), 0.7)
 
-func _material(color: Color) -> StandardMaterial3D:
+func _add_landmark_light(position: Vector3, color: Color) -> void:
+    var light := OmniLight3D.new()
+    light.name = "LandmarkAccentLight"
+    light.position = position + Vector3(0.0, 7.0, 0.0)
+    light.light_color = color.lightened(0.2)
+    light.light_energy = 1.1
+    light.omni_range = 12.0
+    light.shadow_enabled = false
+    world_root.add_child(light)
+
+func _material(color: Color, emission: Color = Color(0.0, 0.0, 0.0, 0.0), emission_energy: float = 0.0) -> StandardMaterial3D:
     var material := StandardMaterial3D.new()
     material.albedo_color = color
     material.roughness = 0.72
+    if emission_energy > 0.0:
+        material.emission_enabled = true
+        material.emission = emission
+        material.emission_energy_multiplier = emission_energy
     return material
 
 func _on_state_changed() -> void:
