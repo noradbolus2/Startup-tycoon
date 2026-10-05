@@ -15,6 +15,7 @@ var camera_pitch := -48.0
 var dragging := false
 var drag_start := Vector2.ZERO
 var selected_id := ""
+var vehicle_tick := 0.0
 
 const GRID := 4.0
 const CITY_RADIUS := 11
@@ -87,7 +88,8 @@ func _create_terrain() -> void:
     _add_box("Terrain", Vector3(52.0, 0.5, 52.0), Vector3(0.0, -0.35, 0.0), Color("#285c53"), world_root)
     for x in range(-CITY_RADIUS, CITY_RADIUS + 1):
         for z in range(-CITY_RADIUS, CITY_RADIUS + 1):
-            if (x * 7 + z * 11) % 9 == 0:
+            var tree_interval := 9 if VisualProfileService.profile != "low" else 15
+            if (x * 7 + z * 11) % tree_interval == 0:
                 _create_tree(Vector3(x * GRID, 0.0, z * GRID), 0.8)
 
 func _create_roads() -> void:
@@ -100,7 +102,8 @@ func _create_roads() -> void:
     for x in range(-CITY_RADIUS, CITY_RADIUS + 1, 4):
         for z in range(-CITY_RADIUS, CITY_RADIUS + 1, 4):
             _add_box("Intersection", Vector3(2.8, 0.09, 2.8), Vector3(x * GRID, 0.07, z * GRID), Color("#344d59"), world_root)
-            _create_streetlight(Vector3(x * GRID + 1.0, 0.0, z * GRID + 1.0))
+            if VisualProfileService.profile != "low" or (x + z) % 2 == 0:
+                _create_streetlight(Vector3(x * GRID + 1.0, 0.0, z * GRID + 1.0))
 
 func _create_water_and_bridge() -> void:
     _add_box("River", Vector3(8.0, 0.12, 52.0), Vector3(WATER_Z * GRID, 0.12, 0.0), Color("#197da0"), world_root)
@@ -156,7 +159,8 @@ func _create_state_buildings() -> void:
         _add_building_collision(node, Vector3(1.8 + level * 0.12, height, 1.8 + level * 0.12), building)
 
 func _create_city_life() -> void:
-    for i in range(12):
+    var vehicle_count := 6 if VisualProfileService.profile == "low" else (9 if VisualProfileService.profile == "medium" else 12)
+    for i in range(vehicle_count):
         var vehicle := _add_box("Vehicle", Vector3(0.65, 0.28, 1.25), Vector3(-22.0 + i * 4.0, 0.35, -12.0), Color("#f4c95d") if i % 2 == 0 else Color("#66c7e6"), world_root)
         vehicles.append(vehicle)
 
@@ -258,11 +262,15 @@ func _on_state_changed() -> void:
     _create_state_buildings()
 
 func _process(delta: float) -> void:
-    for i in range(vehicles.size()):
-        var vehicle := vehicles[i]
-        vehicle.position.x += delta * (1.2 + (i % 3) * 0.35)
-        if vehicle.position.x > 28.0:
-            vehicle.position.x = -28.0
+    vehicle_tick += delta
+    if vehicle_tick >= 0.05:
+        var simulation_step := vehicle_tick
+        vehicle_tick = 0.0
+        for i in range(vehicles.size()):
+            var vehicle := vehicles[i]
+            vehicle.position.x += simulation_step * (1.2 + (i % 3) * 0.35)
+            if vehicle.position.x > 28.0:
+                vehicle.position.x = -28.0
     if camera:
         _update_camera()
 

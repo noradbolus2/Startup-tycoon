@@ -1,6 +1,7 @@
 [application]
 config/name="Startup Tycoon"
 run/main_scene="res://scenes/Main.tscn"
+run/max_fps=60
 config/features=PackedStringArray("4.7", "GL Compatibility")
 
 [display]
