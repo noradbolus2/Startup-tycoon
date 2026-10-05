@@ -18,3 +18,5 @@ environment/defaults/default_clear_color=Color(0.015, 0.035, 0.08, 1)
 
 [autoload]
 GameState="*res://scripts/game_state.gd"
+AnalyticsService="*res://scripts/analytics_service.gd"
+MonetizationService="*res://scripts/monetization_service.gd"

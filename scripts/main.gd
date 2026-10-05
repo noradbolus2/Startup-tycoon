@@ -1,6 +1,6 @@
 extends Node2D
 
-var city: CityView
+var city: City3DView
 var selected: Dictionary = {}
 var selected_label: Label
 var cash_label: Label
@@ -11,13 +11,15 @@ func _ready() -> void:
     EconomyEngine.recalculate(GameState)
     var load_message := SaveManager.load_game(GameState)
     EconomyEngine.recalculate(GameState)
-    city = CityView.new()
+    city = City3DView.new()
     city.name = "CityView"
     add_child(city)
     city.setup(GameState)
     city.building_selected.connect(_on_building_selected)
     build_ui()
     GameState.state_changed.connect(refresh_ui)
+    MonetizationService.purchase_result.connect(_on_purchase_result)
+    AnalyticsService.track("city_opened", {"day":GameState.day})
     refresh_ui()
     if not load_message.is_empty(): action_label.text = load_message
 
@@ -48,7 +50,7 @@ func build_ui() -> void:
     var nav := VBoxContainer.new(); nav.add_theme_constant_override("separation", 6); left.add_child(nav)
     for item in ["BUILD", "BIZ", "MARKET", "STAFF", "TECH", "EMPIRE"]:
         var b := Button.new(); b.text = item; b.custom_minimum_size = Vector2(72, 38); b.pressed.connect(_on_nav.bind(item)); nav.add_child(b)
-    var right := PanelContainer.new(); right.position = Vector2(900, 102); right.size = Vector2(238, 300); right.add_theme_stylebox_override("panel", panel_style(Color(0.03, 0.09, 0.17, 0.94), 14)); add_child(right)
+    var right := PanelContainer.new(); right.position = Vector2(900, 102); right.size = Vector2(238, 364); right.add_theme_stylebox_override("panel", panel_style(Color(0.03, 0.09, 0.17, 0.94), 14)); add_child(right)
     var stack := VBoxContainer.new(); stack.add_theme_constant_override("separation", 7); right.add_child(stack)
     var header := make_label("CITY COMMAND", 16, Color("#f4fbff")); stack.add_child(header)
     selected_label = make_label("Tap a business building\nto inspect it", 13, Color("#b4cee3")); selected_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART; selected_label.custom_minimum_size = Vector2(205, 60); stack.add_child(selected_label)
@@ -57,6 +59,8 @@ func build_ui() -> void:
     var hire := Button.new(); hire.text = "HIRE SPECIALIST  ₹8K"; hire.custom_minimum_size = Vector2(205, 32); hire.pressed.connect(_hire); stack.add_child(hire)
     var develop := Button.new(); develop.text = "DEVELOP PRODUCT"; develop.custom_minimum_size = Vector2(205, 32); develop.pressed.connect(_develop); stack.add_child(develop)
     var tick := Button.new(); tick.text = "CLOSE DAY"; tick.custom_minimum_size = Vector2(205, 32); tick.pressed.connect(_advance_day); stack.add_child(tick)
+    var analytics := Button.new(); analytics.text = "ANALYTICS"; analytics.custom_minimum_size = Vector2(205, 32); analytics.pressed.connect(_show_analytics); stack.add_child(analytics)
+    var offers := Button.new(); offers.text = "OFFERS / SUPPORT"; offers.custom_minimum_size = Vector2(205, 32); offers.pressed.connect(_show_offers); stack.add_child(offers)
     action_label = make_label("Build your business skyline.", 12, Color("#7ea7c0")); action_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART; stack.add_child(action_label)
     var bottom := PanelContainer.new(); bottom.position = Vector2(180, 636); bottom.size = Vector2(790, 58); bottom.add_theme_stylebox_override("panel", panel_style(Color(0.02, 0.07, 0.14, 0.94), 18)); add_child(bottom)
     var tabs := HBoxContainer.new(); tabs.alignment = BoxContainer.ALIGNMENT_CENTER; tabs.add_theme_constant_override("separation", 52); bottom.add_child(tabs)
@@ -82,29 +86,40 @@ func _upgrade() -> void:
     if selected.is_empty(): action_label.text = "Select a building first."; return
     var cost := EconomyEngine.upgrade_cost(selected)
     if GameState.cash >= cost:
-        GameState.cash -= cost; selected.level += 1; EconomyEngine.recalculate(GameState); action_label.text = "%s upgraded to Level %d." % [selected.name, selected.level]; GameState.notify()
+        GameState.cash -= cost; selected.level += 1; EconomyEngine.recalculate(GameState); AnalyticsService.record_building_upgrade(selected); action_label.text = "%s upgraded to Level %d." % [selected.name, selected.level]; GameState.notify()
     else: action_label.text = "Need ₹%s more cash." % format_money(cost - GameState.cash)
 
 func _create_company() -> void:
     if GameState.cash >= 25000:
-        GameState.cash -= 25000; GameState.companies += 1; GameState.reputation += 2; EconomyEngine.recalculate(GameState); action_label.text = "Nova Labs is now part of your empire."; GameState.notify()
+        GameState.cash -= 25000; GameState.companies += 1; GameState.reputation += 2; EconomyEngine.recalculate(GameState); AnalyticsService.track("company_created", {"companies":GameState.companies}); action_label.text = "Nova Labs is now part of your empire."; GameState.notify()
     else: action_label.text = "Create a company needs ₹25K."
 
 func _hire() -> void:
     if GameState.cash >= 8000:
-        GameState.cash -= 8000; GameState.employees += 1; EconomyEngine.recalculate(GameState); action_label.text = "A new specialist joined your team."; GameState.notify()
+        GameState.cash -= 8000; GameState.employees += 1; EconomyEngine.recalculate(GameState); AnalyticsService.track("employee_hired", {"employees":GameState.employees}); action_label.text = "A new specialist joined your team."; GameState.notify()
     else: action_label.text = "Hiring needs ₹8K."
 
 func _develop() -> void:
     if GameState.research >= 10:
-        GameState.research -= 10; GameState.product_stage = mini(5, GameState.product_stage + 1); GameState.revenue_per_day += 2400; action_label.text = "Nova Assistant advanced to stage %d." % GameState.product_stage; GameState.notify()
+        GameState.research -= 10; GameState.product_stage = mini(5, GameState.product_stage + 1); GameState.revenue_per_day += 2400; AnalyticsService.track("product_developed", {"stage":GameState.product_stage}); action_label.text = "Nova Assistant advanced to stage %d." % GameState.product_stage; GameState.notify()
     else: action_label.text = "Need 10% research progress."
 
 func _advance_day() -> void:
-    GameState.daily_tick(); EconomyEngine.recalculate(GameState); action_label.text = "Day %d closed. Net profit added to cash." % GameState.day
+    GameState.daily_tick(); EconomyEngine.recalculate(GameState); AnalyticsService.record_day(GameState); action_label.text = "Day %d closed. Net profit added to cash." % GameState.day
 
 func _save() -> void:
     action_label.text = "Game saved locally." if SaveManager.save_game(GameState) else "Save failed."
 
 func _on_nav(item: String) -> void:
     action_label.text = "%s panel is ready for the next milestone." % item
+
+func _show_analytics() -> void:
+    AnalyticsService.track("analytics_viewed", {"day":GameState.day})
+    action_label.text = AnalyticsService.summary(GameState)
+
+func _show_offers() -> void:
+    AnalyticsService.record_offer_viewed("catalog")
+    action_label.text = MonetizationService.offers_summary()
+
+func _on_purchase_result(message: String) -> void:
+    action_label.text = message
